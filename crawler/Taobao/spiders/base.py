@@ -1,0 +1,18 @@
+# -*- coding: utf-8 -*-
+
+import codecs
+
+import scrapy
+
+from utils.path import *
+
+
+class BaseSpider(scrapy.Spider):
+
+    allowed_domains = ('taobao.com',)
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.file = codecs.open('{}/{}.txt'.format(DATA_DIR, self.name),
+                                'w', 'utf-8')

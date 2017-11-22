@@ -137,3 +137,9 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+
+.idea
+data/*.txt
+data/comments/*.txt
+data/plots/*.png
