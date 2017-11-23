@@ -3,7 +3,7 @@
 import codecs
 import json
 
-from utils.path import *
+from utils.path import DATA_DIR
 from .base import BaseSpider
 
 

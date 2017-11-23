@@ -8,7 +8,7 @@ import re
 from selenium import webdriver
 from selenium.common.exceptions import *
 
-from utils.path import *
+from utils.path import DATA_DIR, COMMENTS_DIR
 
 
 def gen_start_urls():

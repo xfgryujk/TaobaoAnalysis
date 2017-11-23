@@ -5,7 +5,7 @@ import json
 
 from snownlp import SnowNLP
 
-from utils.path import *
+from utils.path import COMMENTS_DIR
 
 total_contents = 0
 total_correct = 0
@@ -25,7 +25,7 @@ def eval_classify(content, rate):
 def parse_comment(comment):
     # -1差评，0中评，1好评
     rate = int(comment['rate'])
-    
+
     for append in comment['appendList']:
         if append['content']:
             eval_classify(append['content'], rate)
@@ -34,10 +34,13 @@ def parse_comment(comment):
     
     
 def main():
+    import os
+
     for filename in os.listdir(COMMENTS_DIR):
         path = os.path.join(COMMENTS_DIR, filename)
-        if not os.path.isfile(path):
+        if not os.path.isfile(path) or not filename.endswith('.txt'):
             continue
+
         print('Parsing', filename)
         
         with codecs.open(path, 'r', 'utf-8') as file:

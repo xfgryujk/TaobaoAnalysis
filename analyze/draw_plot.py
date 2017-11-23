@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 import matplotlib.pyplot as plt
 
-from utils.path import *
+from utils.path import COMMENTS_DIR, PLOTS_DIR
 
 
 def draw_rate_plot(file):
@@ -19,7 +19,7 @@ def draw_rate_plot(file):
             try:
                 date = datetime.strptime(comment['date'], '%Y年%m月%d日 %H:%M')
             except ValueError:
-                # print('Unknown date:', comment['date'])
+                # print('Unknown date:', comment['date'])  # ''
                 continue
             date = date.date()
             # 评价，-1差评，0中评，1好评
