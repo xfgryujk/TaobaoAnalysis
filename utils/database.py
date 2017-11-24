@@ -12,12 +12,34 @@ from .path import DATABASE_PATH
 Base = declarative_base()
 
 
+class Seller(Base):
+
+    __tablename__ = 'sellers'
+
+    id    = Column(Integer, primary_key=True)
+    age   = Column(String)      # 店龄，应该都是整数
+    shops = relationship('Shop', back_populates='seller')  # 商店
+
+
+class Shop(Base):
+
+    __tablename__ = 'shops'
+
+    id        = Column(Integer, primary_key=True)
+    url       = Column(String)      # 商店URL
+    seller_id = Column(Integer, ForeignKey('sellers.id'))       # 卖家ID
+    seller    = relationship('Seller', back_populates='shops')  # 卖家
+    items     = relationship('Item', back_populates='shop')     # 商品
+
+
 class Item(Base):
 
     __tablename__ = 'items'
 
     id      = Column(Integer, primary_key=True)
     title   = Column(String)      # 商品标题
+    shop_id = Column(Integer, ForeignKey('shops.id'))        # 商店ID
+    shop    = relationship('Shop', back_populates='items')   # 商店
     reviews = relationship('Review', back_populates='item')  # 评论
 
 
