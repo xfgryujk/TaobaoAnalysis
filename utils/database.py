@@ -64,12 +64,21 @@ class Review(Base):
     appends   = Column(String)       # 追加评论，每行一条
     user_rank = Column(Integer)      # 用户信用等级，250分以内的积分用红心来表示...，可能为空
 
+    DEFAULT_CONTENTS = (
+        '此用户没有填写评价。',
+        '15天内买家未作出评价',
+        '评价方未及时做出评价,系统默认好评!',
+        '系统默认评论',
+    )
+
     def is_default(self):
-        return self.content in (
-            '此用户没有填写评价。',
-            '15天内买家未作出评价',
-            '评价方未及时做出评价,系统默认好评!',
-        )
+        return self.content in self.DEFAULT_CONTENTS
+
+    @classmethod
+    def filter_default(cls, query):
+        for default in cls.DEFAULT_CONTENTS:
+            query = query.filter(cls.content != default)
+        return query
 
 
 engine = create_engine('sqlite:///' + DATABASE_PATH)

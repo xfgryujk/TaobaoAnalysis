@@ -1,58 +1,39 @@
 # -*- coding: utf-8 -*-
 
-import codecs
-import json
-
 from snownlp import SnowNLP
 
-from utils.path import COMMENTS_DIR
+from utils.database import session, Rate, Review
 
 total_contents = 0
 total_correct = 0
 
 
 def eval_classify(content, rate):
+    if not content:
+        return
+
     snow = SnowNLP(content)
     sentiments = snow.sentiments
-    _rate = -1 if sentiments < 0.4 else 1 if sentiments > 0.6 else 0
+    _rate = Rate.bad if sentiments < 0.4 else Rate.good if sentiments > 0.6 else Rate.middle
     
     global total_contents, total_correct
     total_contents += 1
     if _rate == rate:
         total_correct += 1
     
-
-def parse_comment(comment):
-    # -1差评，0中评，1好评
-    rate = int(comment['rate'])
-
-    for append in comment['appendList']:
-        if append['content']:
-            eval_classify(append['content'], rate)
-    if comment['content']:
-        eval_classify(comment['content'], rate)
-    
     
 def main():
-    import os
+    for review in Review.filter_default(session.query(Review)):
+        print(review.id)
 
-    for filename in os.listdir(COMMENTS_DIR):
-        path = os.path.join(COMMENTS_DIR, filename)
-        if not os.path.isfile(path) or not filename.endswith('.txt'):
-            continue
-
-        print('Parsing', filename)
-        
-        with codecs.open(path, 'r', 'utf-8') as file:
-            for line in file:
-                data = json.loads(line)
-                for comment in data['comments']:
-                    parse_comment(comment)
+        eval_classify(review.content, review.rate)
+        for content in review.appends.split('\n'):
+            eval_classify(content, review.rate)
 
     print('total_contents =', total_contents)
     print('total_correct =', total_correct)
     print('correct_rate =', total_correct / total_contents)
-    # 68%正确率，运算超慢
+    # 大约73.3%正确率，运算超慢
 
 
 if __name__ == '__main__':

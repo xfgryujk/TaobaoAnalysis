@@ -43,7 +43,11 @@ class CommentSpider:
             self.driver.get(url)
             self.parse()
 
-            session.commit()
+            try:
+                session.commit()
+            except:
+                logger.exception('提交数据库时出错：')
+                return
 
     def parse(self):
         try:
@@ -170,5 +174,7 @@ class CommentSpider:
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)-15s [%(name)s] %(levelname)s: %(message)s')
     spider = CommentSpider()
     spider.start_requests()

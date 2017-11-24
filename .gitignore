@@ -141,8 +141,5 @@ $RECYCLE.BIN/
 
 .idea
 data/*
-!data/.gitkeep
-data/comments/*
-!data/comments/.gitkeep
 data/plots/*
 !data/plots/.gitkeep

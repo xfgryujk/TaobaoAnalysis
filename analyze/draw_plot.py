@@ -1,33 +1,31 @@
 # -*- coding: utf-8 -*-
 
-import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import matplotlib.pyplot as plt
 
-from utils.path import COMMENTS_DIR, PLOTS_DIR
+from utils.database import session, Item
+from utils.path import PLOTS_DIR, replace_illegal_chars
 
 
-def draw_rate_plot(file):
+def draw_rate_plot(reviews):
     # date -> rate -> 数量
     rates = {}
 
-    for line in file:
-        data = json.loads(line)
-        for comment in data['comments']:
-            # 日期
-            try:
-                date = datetime.strptime(comment['date'], '%Y年%m月%d日 %H:%M')
-            except ValueError:
-                # print('Unknown date:', comment['date'])  # ''
-                continue
-            date = date.date()
-            # 评价，-1差评，0中评，1好评
-            rate = comment['rate']
+    for review in reviews:
+        if review.is_default():  # 忽略默认评论
+            continue
+        if review.date is None:  # 未知日期
+            continue
+        date = review.date.date()
+        rate = review.rate
 
-            if date not in rates:
-                rates[date] = {'-1': 0, '0': 0, '1': 0}
-            rates[date][rate] += 1
+        if date not in rates:
+            rates[date] = {'-1': 0, '0': 0, '1': 0}
+        rates[date][rate] += 1
+
+    if not rates:
+        return
 
     # X
     min_date = min(rates.keys())
@@ -45,24 +43,24 @@ def draw_rate_plot(file):
     # 画图
     plt.bar(dates, good_count)
     plt.bar(dates, bad_count)
-    # plt.ylim(-25, 25)
-    # plt.show()
+    # plt.ylim(-10, 40)
 
 
 def main():
-    import os
+    from os.path import exists
 
-    for filename in os.listdir(COMMENTS_DIR):
-        title, ext = os.path.splitext(filename)
-        if not ext == '.txt':
+    for item in session.query(Item):
+        print(item.id, item.title)
+
+        filename = '{} {}.png'.format(item.id, item.title)
+        filename = replace_illegal_chars(filename)
+        path = PLOTS_DIR + '/' + filename
+        if exists(path):
             continue
-        path = os.path.join(COMMENTS_DIR, filename)
-        print(filename)
 
         plt.cla()
-        with open(path) as f:
-            draw_rate_plot(f)
-        plt.savefig(os.path.join(PLOTS_DIR, title + '.png'))
+        draw_rate_plot(item.reviews)
+        plt.savefig(path)
 
 
 if __name__ == '__main__':
