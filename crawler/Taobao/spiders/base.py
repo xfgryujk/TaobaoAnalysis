@@ -4,7 +4,7 @@ import codecs
 
 import scrapy
 
-from utils.path import *
+from utils.path import DATA_DIR
 
 
 class BaseSpider(scrapy.Spider):

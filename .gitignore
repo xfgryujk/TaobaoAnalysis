@@ -140,6 +140,6 @@ $RECYCLE.BIN/
 
 
 .idea
-data/*.txt
-data/comments/*.txt
-data/plots/*.png
+data/*
+data/plots/*
+!data/plots/.gitkeep
