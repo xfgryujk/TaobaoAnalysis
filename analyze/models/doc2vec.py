@@ -15,8 +15,8 @@ from utils.train import (CORPUS_POS_PATH, CORPUS_NEG_PATH, TRAIN_POS_PATH,
 from tflearn import input_data, fully_connected, regression, DNN
 
 DOC2VEC_MODEL_PATH = DATA_DIR + '/model.d2v'
-FEATURE_DIM = 100
 CLASSIFIER_MODEL_PATH = DATA_DIR + '/d2v_classifier'
+FEATURE_DIM = 128
 
 
 class TaggedLineDocument:
@@ -46,11 +46,14 @@ class TaggedLineDocument:
         for source, prefix in self.sources.items():
             with utils.smart_open(source) as fin:
                 for item_no, line in enumerate(fin):
-                    yield TaggedDocument(utils.to_unicode(line).split(),
+                    yield TaggedDocument(utils.to_unicode(line[:-1]).split(' '),
                                          [prefix + '_' + str(item_no)])
 
 
 class Model:
+    """
+    目前效果很差，预测结果全在0.7左右
+    """
 
     def __init__(self):
         if exists(DOC2VEC_MODEL_PATH):
@@ -69,10 +72,7 @@ class Model:
         需要语料库
         """
 
-        sources = {
-            CORPUS_POS_PATH: 'POS',
-            CORPUS_NEG_PATH: 'NEG',
-        }
+        sources = {CORPUS_POS_PATH: 'POS', CORPUS_NEG_PATH: 'NEG'}
         sentences = TaggedLineDocument(sources)
         self.d2v.build_vocab(sentences)
 
@@ -83,8 +83,8 @@ class Model:
 
     @staticmethod
     def _create_classifier():
-        net = input_data((None, FEATURE_DIM))
-        net = fully_connected(net, 50)
+        net = input_data([None, FEATURE_DIM])
+        net = fully_connected(net, 128, activation='tanh')
         net = fully_connected(net, 2, activation='softmax')
         net = regression(net, optimizer='adam', learning_rate=0.001,
                          loss='categorical_crossentropy')
@@ -99,13 +99,13 @@ class Model:
         x = []
         with codecs.open(pos_path, 'r', 'utf-8') as file:
             for line in file:
-                x.append(self.d2v.infer_vector(line.split(' ')))
-        y = [[1, 0]] * len(x)
+                x.append(self.d2v.infer_vector(line[:-1].split(' ')))
+        y = [[1., 0.]] * len(x)
 
         with codecs.open(neg_path, 'r', 'utf-8') as file:
             for line in file:
-                x.append(self.d2v.infer_vector(line.split(' ')))
-        y += [[0, 1]] * (len(x) - len(y))
+                x.append(self.d2v.infer_vector(line[:-1].split(' ')))
+        y += [[0., 1.]] * (len(x) - len(y))
 
         return x, y
 
@@ -119,7 +119,7 @@ class Model:
         test_x, test_y = self._read_samples(TEST_POS_PATH, TEST_NEG_PATH)
 
         self.classifier.fit(train_x, train_y, validation_set=(test_x, test_y),
-                            n_epoch=10, shuffle=True, show_metric=True,
+                            n_epoch=20, shuffle=True, show_metric=True,
                             snapshot_epoch=True)
 
         self.classifier.save(CLASSIFIER_MODEL_PATH)
@@ -129,8 +129,8 @@ class Model:
         计算文本情感值，需要已训练好的Doc2Vec模型和DNN分类器
         """
 
-        x = self.d2v.infer_vector(cut(text))
-        return self.classifier.predict((x,))[0][0]
+        x = [self.d2v.infer_vector(cut(text))]
+        return self.classifier.predict(x)[0][0]
 
 
 if __name__ == '__main__':
