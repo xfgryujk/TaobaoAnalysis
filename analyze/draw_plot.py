@@ -5,7 +5,9 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 
 from utils.database import session, Item
-from utils.path import PLOTS_DIR, replace_illegal_chars
+from utils.path import DATA_DIR, replace_illegal_chars
+
+PLOTS_DIR = DATA_DIR + '/plots'
 
 
 def draw_rate_plot(reviews):

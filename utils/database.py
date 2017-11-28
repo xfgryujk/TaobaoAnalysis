@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
+from enum import Enum
+
 from sqlalchemy import (create_engine, Column, ForeignKey, Integer, String,
                         DateTime)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
-from enum import Enum
+from .path import DATA_DIR
 
-from .path import DATABASE_PATH
+DATABASE_PATH = DATA_DIR + '/database.db'
 
 Base = declarative_base()
 
