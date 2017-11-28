@@ -35,7 +35,7 @@ def create_corpus(pos_path=CORPUS_POS_PATH, neg_path=CORPUS_NEG_PATH):
                     .filter(Review.content != '')
                     )):
                 content, rate = result
-                file = pos_file if rate == Rate.good else neg_file
+                file = pos_file if rate == Rate.GOOD else neg_file
                 file.write(' '.join(cut(content)))
                 file.write('\n')
 

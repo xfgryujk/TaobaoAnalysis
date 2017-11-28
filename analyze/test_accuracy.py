@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from snownlp import SnowNLP
+from analyze.models.rnn import Model
 
 from utils.database import session, Rate, Review
 
+model = Model()
 total_contents = 0
 total_correct = 0
 
@@ -12,9 +13,8 @@ def eval_classify(content, rate):
     if not content:
         return
 
-    snow = SnowNLP(content)
-    sentiments = snow.sentiments
-    _rate = Rate.bad if sentiments < 0.4 else Rate.good if sentiments > 0.6 else Rate.middle
+    sentiments = model.predict(content)
+    _rate = Rate.BAD if sentiments < 0.4 else Rate.GOOD if sentiments > 0.6 else Rate.MIDDLE
     
     global total_contents, total_correct
     total_contents += 1
@@ -23,17 +23,16 @@ def eval_classify(content, rate):
     
     
 def main():
-    for review in Review.filter_default(session.query(Review)):
-        print(review.id)
-
+    for index, review in enumerate(Review.filter_default(session.query(Review))):
         eval_classify(review.content, review.rate)
         for content in review.appends.split('\n'):
             eval_classify(content, review.rate)
 
-    print('total_contents =', total_contents)
-    print('total_correct =', total_correct)
-    print('correct_rate =', total_correct / total_contents)
-    # 大约73.3%正确率，运算超慢
+        if index % 100 == 0:
+            print('total_contents =', total_contents)
+            print('total_correct =', total_correct)
+            print('correct_rate =', total_correct / total_contents)
+            # 大约82.7%正确率
 
 
 if __name__ == '__main__':
