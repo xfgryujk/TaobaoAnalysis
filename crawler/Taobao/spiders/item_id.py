@@ -84,7 +84,7 @@ class ItemIdFromHomePageSpider(BaseSpider):
                     ])
 
         if not tce_ids:
-            self.logger.warning('No tce_id on "%s"', response.url)
+            self.logger.warning('没有tce_id "%s"', response.url)
         else:
             for tce_url in self.get_tce_urls(tce_ids):
                 yield Request(tce_url, callback=self.parse_item_id)

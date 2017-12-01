@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+"""
+读写数据库相关
+定义了数据库模型
+"""
+
 from enum import Enum
 
 from sqlalchemy import (create_engine, Column, ForeignKey, Integer, String,

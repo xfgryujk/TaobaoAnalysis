@@ -8,6 +8,9 @@ from utils.path import CRAWLER_DATA_DIR
 
 
 class BaseSpider(Spider):
+    """
+    所有淘宝Scrapy爬虫基类，定义通用属性和储存文件路径
+    """
 
     allowed_domains = ('taobao.com',)
     file_title = None

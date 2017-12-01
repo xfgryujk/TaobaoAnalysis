@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+创建训练模型用的数据集
+"""
+
 import codecs
 from os.path import exists
 from random import choices

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+测试模型计算情感值正确率
+"""
+
 from analyze.models.rnn import Model
 
 from utils.database import session, Rate, Review
