@@ -2,12 +2,12 @@
 
 import codecs
 
-import scrapy
+from scrapy import Spider
 
 from utils.path import CRAWLER_DATA_DIR
 
 
-class BaseSpider(scrapy.Spider):
+class BaseSpider(Spider):
 
     allowed_domains = ('taobao.com',)
     file_title = None
