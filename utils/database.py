@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+"""
+读写数据库相关
+定义了数据库模型
+"""
+
 from enum import Enum
 
 from sqlalchemy import (create_engine, Column, ForeignKey, Integer, String,
@@ -46,10 +51,10 @@ class Item(Base):
 
 
 class Rate(str, Enum):
-    default = '-2'      # 15天内买家未作出评价
-    bad     = '-1'      # 差评
-    middle  = '0'       # 中评
-    good    = '1'       # 好评
+    DEFAULT = '-2'      # 15天内买家未作出评价
+    BAD     = '-1'      # 差评
+    MIDDLE  = '0'       # 中评
+    GOOD    = '1'       # 好评
 
 
 class Review(Base):

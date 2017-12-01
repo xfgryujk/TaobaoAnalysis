@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+"""
+方便启动和调试Scrapy爬虫的脚本
+用法：run_scrapy.py spider_name
+"""
+
 from sys import argv
 
 from scrapy.cmdline import execute

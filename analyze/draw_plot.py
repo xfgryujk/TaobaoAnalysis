@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
+"""
+画各种统计图
+"""
+
 from datetime import timedelta
+from os.path import exists
 
 import matplotlib.pyplot as plt
 
@@ -10,7 +15,11 @@ from utils.path import DATA_DIR, replace_illegal_chars
 PLOTS_DIR = DATA_DIR + '/plots'
 
 
-def draw_rate_plot(reviews):
+def do_draw_rate_time_plot(reviews):
+    """
+    画评价数量-时间曲线
+    """
+
     # date -> rate -> 数量
     rates = {}
 
@@ -48,8 +57,10 @@ def draw_rate_plot(reviews):
     # plt.ylim(-10, 40)
 
 
-def main():
-    from os.path import exists
+def draw_rate_time_plot():
+    """
+    画所有商品的评价数量-时间曲线，保存到文件
+    """
 
     for item in session.query(Item):
         print(item.id, item.title)
@@ -61,9 +72,9 @@ def main():
             continue
 
         plt.cla()
-        draw_rate_plot(item.reviews)
+        do_draw_rate_time_plot(item.reviews)
         plt.savefig(path)
 
 
 if __name__ == '__main__':
-    main()
+    draw_rate_time_plot()

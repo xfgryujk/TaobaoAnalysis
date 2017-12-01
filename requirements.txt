@@ -1,0 +1,6 @@
+selenium==3.6.0
+jieba==0.39
+Scrapy==1.4.0
+matplotlib==2.1.0
+tflearn==0.3.2
+SQLAlchemy==1.2.0b3

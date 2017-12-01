@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+使用RNN模型计算句子情感值
+"""
+
 import codecs
 from os.path import exists
 
@@ -8,17 +12,23 @@ from tflearn import (input_data, embedding, lstm, fully_connected, regression,
                      DNN)
 from tflearn.data_utils import pad_sequences
 
-from utils.path import DATA_DIR
+from utils.path import MODELS_DIR
 from utils.train import (TRAIN_POS_PATH, TRAIN_NEG_PATH,
                          TEST_POS_PATH, TEST_NEG_PATH)
 
-VOCABULARY_PATH = DATA_DIR + '/vocabulary.txt'
-CLASSIFIER_MODEL_PATH = DATA_DIR + '/rnn_classifier'
+CLASSIFIER_MODEL_PATH = MODELS_DIR + '/rnn_classifier'
+VOCABULARY_PATH = CLASSIFIER_MODEL_PATH + '.vocab.txt'
+# 词向量特征数
 FEATURE_DIM = 128
+# 句子中最多词数
 SEQUENCE_LEN = 100
 
 
 class Model:
+    """
+    输入句子 -> 分词 -> 词ID -> 词向量 -> LSTM层 -> 全连接层 -> 输出正面、负面概率
+    取正面概率为情感值
+    """
 
     def __init__(self):
         if not exists(VOCABULARY_PATH):
@@ -32,7 +42,7 @@ class Model:
         if exists(CLASSIFIER_MODEL_PATH + '.meta'):
             self.classifier.load(CLASSIFIER_MODEL_PATH)
 
-    def _build_vocab(self, min_freq=3):
+    def _build_vocab(self, min_count=3):
         """
         创建词汇表
         需要训练样本
@@ -49,7 +59,7 @@ class Model:
             if del_word in freq:
                 del freq[del_word]
         # 保证''ID为0
-        self.vocab = [''] + [word for word, count in freq.items() if count >= min_freq]
+        self.vocab = [''] + [word for word, count in freq.items() if count >= min_count]
 
         with codecs.open(VOCABULARY_PATH, 'w', 'utf-8') as file:
             for word in self.vocab:

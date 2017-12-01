@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+创建训练模型用的数据集
+"""
+
 import codecs
 from os.path import exists
 from random import choices
@@ -7,14 +11,14 @@ from random import choices
 from jieba import cut
 
 from utils.database import session, Review, Rate
-from utils.path import DATA_DIR
+from utils.path import TRAIN_DIR
 
-CORPUS_POS_PATH = DATA_DIR + '/corpus_pos.txt'
-CORPUS_NEG_PATH = DATA_DIR + '/corpus_neg.txt'
-TRAIN_POS_PATH = DATA_DIR + '/train_pos.txt'
-TRAIN_NEG_PATH = DATA_DIR + '/train_neg.txt'
-TEST_POS_PATH = DATA_DIR + '/test_pos.txt'
-TEST_NEG_PATH = DATA_DIR + '/test_neg.txt'
+CORPUS_POS_PATH = TRAIN_DIR + '/corpus_pos.txt'
+CORPUS_NEG_PATH = TRAIN_DIR + '/corpus_neg.txt'
+TRAIN_POS_PATH = TRAIN_DIR + '/train_pos.txt'
+TRAIN_NEG_PATH = TRAIN_DIR + '/train_neg.txt'
+TEST_POS_PATH = TRAIN_DIR + '/test_pos.txt'
+TEST_NEG_PATH = TRAIN_DIR + '/test_neg.txt'
 
 
 def create_corpus(pos_path=CORPUS_POS_PATH, neg_path=CORPUS_NEG_PATH):
@@ -35,7 +39,7 @@ def create_corpus(pos_path=CORPUS_POS_PATH, neg_path=CORPUS_NEG_PATH):
                     .filter(Review.content != '')
                     )):
                 content, rate = result
-                file = pos_file if rate == Rate.good else neg_file
+                file = pos_file if rate == Rate.GOOD else neg_file
                 file.write(' '.join(cut(content)))
                 file.write('\n')
 

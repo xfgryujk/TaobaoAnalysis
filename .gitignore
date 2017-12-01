@@ -139,7 +139,4 @@ $RECYCLE.BIN/
 *.lnk
 
 
-.idea
-data/*
-data/plots/*
-!data/plots/.gitkeep
+.idea/
