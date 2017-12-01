@@ -3,14 +3,14 @@
 import codecs
 import json
 
-from utils.path import DATA_DIR
 from .base import BaseSpider
+from .tce_id import TceIdSpider
 
 
 def gen_start_urls():
     tce_sids = []
     tce_vids = []
-    with codecs.open(DATA_DIR + '/TceId.txt', 'r', 'utf-8') as file:
+    with codecs.open(TceIdSpider.get_file_path(), 'r', 'utf-8') as file:
         for line in file:
             data = json.loads(line)
             tce_sids.append(data[0])
@@ -36,6 +36,7 @@ class ItemIdSpider(BaseSpider):
     """
 
     name = 'ItemId'
+    file_title = 'item_id'
     start_urls = gen_start_urls()
 
     def parse(self, response):

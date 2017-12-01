@@ -8,12 +8,12 @@ from tflearn import (input_data, embedding, lstm, fully_connected, regression,
                      DNN)
 from tflearn.data_utils import pad_sequences
 
-from utils.path import DATA_DIR
+from utils.path import MODELS_DIR
 from utils.train import (TRAIN_POS_PATH, TRAIN_NEG_PATH,
                          TEST_POS_PATH, TEST_NEG_PATH)
 
-VOCABULARY_PATH = DATA_DIR + '/vocabulary.txt'
-CLASSIFIER_MODEL_PATH = DATA_DIR + '/rnn_classifier'
+CLASSIFIER_MODEL_PATH = MODELS_DIR + '/rnn_classifier'
+VOCABULARY_PATH = CLASSIFIER_MODEL_PATH + '.vocab.txt'
 FEATURE_DIM = 128
 SEQUENCE_LEN = 100
 

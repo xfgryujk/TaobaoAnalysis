@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from .base import BaseSpider
 import json
+
+from .base import BaseSpider
 
 
 class TceIdSpider(BaseSpider):
@@ -10,6 +11,7 @@ class TceIdSpider(BaseSpider):
     """
 
     name = 'TceId'
+    file_title = 'tce_id'
     start_urls = (
         'https://www.taobao.com/markets/nvzhuang/taobaonvzhuang',
         'https://www.taobao.com/markets/nanzhuang/2017new',

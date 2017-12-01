@@ -2,9 +2,7 @@
 
 from selenium import webdriver
 
-from .path import PHANTOM_JS_PATH
-
-__driver = webdriver.PhantomJS(executable_path=PHANTOM_JS_PATH)
+__driver = webdriver.PhantomJS()
 __driver.get('about:blank')
 
 

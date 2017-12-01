@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 DATA_DIR = 'data'
-
-PHANTOM_JS_PATH = r'F:\WebDriver\phantomjs-2.1.1-windows\bin\phantomjs.exe'
+CRAWLER_DATA_DIR = DATA_DIR + '/crawler'
+TRAIN_DIR = DATA_DIR + '/train'
+MODELS_DIR = DATA_DIR + '/models'
 
 
 def replace_illegal_chars(filename):
