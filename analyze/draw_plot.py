@@ -9,13 +9,37 @@ from os.path import exists
 
 import matplotlib.pyplot as plt
 
+from analyze.models.sentiment import SentimentModel
 from utils.database import session, Item
 from utils.path import DATA_DIR, replace_illegal_chars
 
 PLOTS_DIR = DATA_DIR + '/plots'
 
+sentiment_model = None
 
-def do_draw_rate_time_plot(reviews):
+
+def draw_plot_per_item(draw_func, plots_dir=PLOTS_DIR):
+    """
+    每个商品画一个图，保存到文件
+    :param draw_func: 画图函数，参数：reviews
+    :param plots_dir: 保存图像的文件夹
+    """
+
+    for item in session.query(Item):
+        print(item.id, item.title)
+
+        filename = '{} {}.png'.format(item.id, item.title)
+        filename = replace_illegal_chars(filename)
+        path = plots_dir + '/' + filename
+        if exists(path):
+            continue
+
+        draw_func(item.reviews)
+        plt.savefig(path)
+        plt.cla()
+
+
+def draw_rate_time_plot(reviews):
     """
     画评价数量-时间曲线
     """
@@ -57,24 +81,20 @@ def do_draw_rate_time_plot(reviews):
     # plt.ylim(-10, 40)
 
 
-def draw_rate_time_plot():
+def draw_rate_histogram(reviews):
     """
-    画所有商品的评价数量-时间曲线，保存到文件
+    画情感直方图
     """
 
-    for item in session.query(Item):
-        print(item.id, item.title)
+    global sentiment_model
+    if sentiment_model is None:
+        sentiment_model = SentimentModel()
 
-        filename = '{} {}.png'.format(item.id, item.title)
-        filename = replace_illegal_chars(filename)
-        path = PLOTS_DIR + '/' + filename
-        if exists(path):
-            continue
+    sentiments = [sentiment_model.predict(review.content)
+                  for review in reviews]
 
-        plt.cla()
-        do_draw_rate_time_plot(item.reviews)
-        plt.savefig(path)
+    plt.hist(sentiments, bins=100, range=(0, 1), normed=1)
 
 
 if __name__ == '__main__':
-    draw_rate_time_plot()
+    draw_plot_per_item(draw_rate_histogram)

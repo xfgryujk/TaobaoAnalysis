@@ -10,7 +10,7 @@ from enum import Enum
 from sqlalchemy import (create_engine, Column, ForeignKey, Integer, String,
                         DateTime)
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 
 from .path import DATA_DIR
 
@@ -89,6 +89,6 @@ class Review(Base):
 
 
 engine = create_engine('sqlite:///' + DATABASE_PATH)
-Session = sessionmaker(bind=engine)
-session = Session()
+Session = scoped_session(sessionmaker(bind=engine))
+session = Session()  # 只能在主线程用
 Base.metadata.create_all(engine)

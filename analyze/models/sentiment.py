@@ -24,7 +24,7 @@ FEATURE_DIM = 128
 SEQUENCE_LEN = 100
 
 
-class Model:
+class SentimentModel:
     """
     输入句子 -> 分词 -> 词ID -> 词向量 -> LSTM层 -> 全连接层 -> 输出正面、负面概率
     取正面概率为情感值
@@ -122,5 +122,5 @@ class Model:
 
 
 if __name__ == '__main__':
-    model = Model()
+    model = SentimentModel()
     model.train()

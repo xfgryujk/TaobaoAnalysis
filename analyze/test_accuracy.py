@@ -4,11 +4,11 @@
 测试模型计算情感值正确率
 """
 
-from analyze.models.rnn import Model
+from analyze.models.sentiment import SentimentModel
 
 from utils.database import session, Rate, Review
 
-model = Model()
+model = SentimentModel()
 total_contents = 0
 total_correct = 0
 
@@ -24,6 +24,8 @@ def eval_classify(content, rate):
     total_contents += 1
     if _rate == rate:
         total_correct += 1
+    else:
+        print(sentiments, rate, content)
     
     
 def main():
