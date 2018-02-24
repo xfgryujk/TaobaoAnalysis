@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-创建训练模型用的数据集
+创建训练情感模型用的数据集
 """
 
 import codecs
@@ -12,19 +12,20 @@ from jieba import cut
 
 from utils.database import session, Review, Rate
 from utils.path import TRAIN_DIR
+from analyze.dataprocess.data_utils import clean_text
 
-CORPUS_POS_PATH = TRAIN_DIR + '/corpus_pos.txt'
-CORPUS_NEG_PATH = TRAIN_DIR + '/corpus_neg.txt'
-TRAIN_POS_PATH = TRAIN_DIR + '/train_pos.txt'
-TRAIN_NEG_PATH = TRAIN_DIR + '/train_neg.txt'
-TEST_POS_PATH = TRAIN_DIR + '/test_pos.txt'
-TEST_NEG_PATH = TRAIN_DIR + '/test_neg.txt'
+CORPUS_POS_PATH = TRAIN_DIR + '/sentiment_corpus_pos.txt'
+CORPUS_NEG_PATH = TRAIN_DIR + '/sentiment_corpus_neg.txt'
+TRAIN_POS_PATH = TRAIN_DIR + '/sentiment_train_pos.txt'
+TRAIN_NEG_PATH = TRAIN_DIR + '/sentiment_train_neg.txt'
+TEST_POS_PATH = TRAIN_DIR + '/sentiment_test_pos.txt'
+TEST_NEG_PATH = TRAIN_DIR + '/sentiment_test_neg.txt'
 
 
 def create_corpus(pos_path=CORPUS_POS_PATH, neg_path=CORPUS_NEG_PATH):
     """
     用数据库中所有非默认评论创建语料库
-    每行一条评论，分词以空格分割
+    每行一条评论，分词以全角空格分割
     """
 
     # 防止手贱
@@ -35,12 +36,13 @@ def create_corpus(pos_path=CORPUS_POS_PATH, neg_path=CORPUS_NEG_PATH):
     with codecs.open(pos_path, 'w', 'utf-8') as pos_file:
         with codecs.open(neg_path, 'w', 'utf-8') as neg_file:
             for index, result in enumerate(Review.filter_default(
-                    session.query(Review.content, Review.rate)
-                    .filter(Review.content != '')
-                    )):
+                session.query(Review.content, Review.rate)
+                .filter(Review.content != '')
+            )):
                 content, rate = result
+                content = clean_text(content)
                 file = pos_file if rate == Rate.GOOD else neg_file
-                file.write(' '.join(cut(content)))
+                file.write('　'.join(cut(content)))
                 file.write('\n')
 
                 if index % 100 == 0:

@@ -12,11 +12,12 @@ from tflearn import (input_data, embedding, lstm, fully_connected, regression,
                      DNN)
 from tflearn.data_utils import pad_sequences
 
+from analyze.dataprocess.sentiment import (TRAIN_POS_PATH, TRAIN_NEG_PATH,
+                                           TEST_POS_PATH, TEST_NEG_PATH)
+from analyze.dataprocess.data_utils import clean_text
 from utils.path import MODELS_DIR
-from utils.train import (TRAIN_POS_PATH, TRAIN_NEG_PATH,
-                         TEST_POS_PATH, TEST_NEG_PATH)
 
-CLASSIFIER_MODEL_PATH = MODELS_DIR + '/rnn_classifier'
+CLASSIFIER_MODEL_PATH = MODELS_DIR + '/sentiment'
 VOCABULARY_PATH = CLASSIFIER_MODEL_PATH + '.vocab.txt'
 # 词向量特征数
 FEATURE_DIM = 128
@@ -52,7 +53,7 @@ class SentimentModel:
         for path in (TRAIN_POS_PATH, TRAIN_NEG_PATH):
             with codecs.open(path, 'r', 'utf-8') as file:
                 for line in file:
-                    for word in line[:-1].split(' '):
+                    for word in line[:-1].split('　'):
                         freq[word] = freq.get(word, 0) + 1
 
         for del_word in ('', '\n'):
@@ -70,7 +71,7 @@ class SentimentModel:
     def _create_classifier(self):
         net = input_data([None, SEQUENCE_LEN])
         net = embedding(net, input_dim=len(self.vocab), output_dim=FEATURE_DIM)
-        net = lstm(net, 128, dropout=0.8)
+        net = lstm(net, FEATURE_DIM, dropout=0.8)
         net = fully_connected(net, 2, activation='softmax')
         net = regression(net, optimizer='adam', learning_rate=0.001,
                          loss='categorical_crossentropy')
@@ -84,12 +85,12 @@ class SentimentModel:
         x = []
         with codecs.open(pos_path, 'r', 'utf-8') as file:
             for line in file:
-                x.append([self.word_id.get(word, 0) for word in line[:-1].split(' ')])
+                x.append([self.word_id.get(word, 0) for word in line[:-1].split('　')])
         y = [[1., 0.]] * len(x)
 
         with codecs.open(neg_path, 'r', 'utf-8') as file:
             for line in file:
-                x.append([self.word_id.get(word, 0) for word in line[:-1].split(' ')])
+                x.append([self.word_id.get(word, 0) for word in line[:-1].split('　')])
         y += [[0., 1.]] * (len(x) - len(y))
 
         x = pad_sequences(x, maxlen=SEQUENCE_LEN, value=0.)
@@ -116,6 +117,7 @@ class SentimentModel:
         计算文本情感值，需要已训练好的分类器
         """
 
+        text = clean_text(text)
         x = [[self.word_id.get(word, 0) for word in cut(text)]]
         x = pad_sequences(x, maxlen=SEQUENCE_LEN, value=0.)
         return self.classifier.predict(x)[0][0]
