@@ -139,7 +139,7 @@ class ReviewSpider:
                 
             # 取JSONP响应
             review_data = self.driver.execute_script('return review_data')
-            for review in review_data['reviews']:
+            for review in review_data['comments']:
                 date = (datetime.strptime(review['date'], '%Y年%m月%d日 %H:%M')
                         if review['date'] else None)
                 appends = [i['content'] for i in review['appendList']]
@@ -151,7 +151,8 @@ class ReviewSpider:
                                    content=review['content'],
                                    date=date,
                                    appends=appends,
-                                   user_rank=review['user']['rank'] if review['user'] else None
+                                   user_rank=review['user']['rank'] if review['user'] else None,
+                                   has_photo=bool(review['photos'])
                                    ))
 
         except:
