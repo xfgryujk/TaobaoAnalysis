@@ -39,16 +39,16 @@ def draw_plot_per_item(draw_func, plots_dir=PLOTS_DIR):
         plt.cla()
 
 
-def draw_rate_time_plot(reviews):
+def draw_rate_time_plot(reviews, ignore_default=False, fix_y_limit=True):
     """
-    画评价数量-时间曲线
+    画评价数量-时间图
     """
 
     # date -> rate -> 数量
     rates = {}
 
     for review in reviews:
-        if review.is_default():  # 忽略默认评论
+        if ignore_default and review.is_default():  # 忽略默认评论
             continue
         if review.date is None:  # 未知日期
             continue
@@ -68,17 +68,20 @@ def draw_rate_time_plot(reviews):
     dates = [min_date + timedelta(days=day_offset)
              for day_offset in range((max_date - min_date).days + 1)]
     # Y
-    good_count = []
-    bad_count = []
+    good_counts = []
+    bad_counts = []
     for date in dates:
         rank = rates.get(date, {'-1': 0, '0': 0, '1': 0})
-        good_count.append(rank['1'])
-        bad_count.append(-(rank['-1'] + rank['0']))
+        good_counts.append(rank['1'])
+        bad_counts.append(-(rank['-1'] + rank['0']))
 
     # 画图
-    plt.bar(dates, good_count)
-    plt.bar(dates, bad_count)
-    # plt.ylim(-10, 40)
+    good_bars = plt.bar(dates, good_counts)
+    bad_bars = plt.bar(dates, bad_counts)
+    if fix_y_limit:
+        plt.ylim(-10, 40)
+
+    return dates, good_counts, bad_counts, good_bars, bad_bars
 
 
 def draw_rate_histogram(reviews):
@@ -97,4 +100,4 @@ def draw_rate_histogram(reviews):
 
 
 if __name__ == '__main__':
-    draw_plot_per_item(draw_rate_histogram)
+    draw_plot_per_item(draw_rate_time_plot)

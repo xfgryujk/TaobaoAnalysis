@@ -151,7 +151,8 @@ class ReviewSpider:
                                    content=review['content'],
                                    date=date,
                                    appends=appends,
-                                   user_rank=review['user']['rank'] if review['user'] else None
+                                   user_rank=review['user']['rank'] if review['user'] else None,
+                                   has_photo=bool(review['photos'])
                                    ))
 
         except:
