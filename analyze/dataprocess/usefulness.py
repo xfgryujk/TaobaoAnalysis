@@ -5,13 +5,12 @@
 """
 
 import msvcrt
-import sys
 from threading import Thread
 
 import matplotlib.pyplot as plt
 
 from analyze.draw_plot import draw_rate_time_plot
-from utils.database import session, Rate, Item
+from utils.database import Session, Rate, Item, Review
 
 
 def get_char():
@@ -25,29 +24,14 @@ def get_char():
     return chr(ord(ch))
 
 
-def canvas_event_loop_thread():
+def annotate_data_thread():
     """
-    消息循环线程，防止matplotlib阻塞
-    """
-
-    canvas = plt.gcf().canvas
-    canvas.mpl_connect('close_event', lambda event: sys.exit(0))
-    canvas.start_event_loop()
-
-
-def annotate_data():
-    """
-    手动标注数据，只能从Windows控制台运行，不能从IDE运行
+    标注数据的线程
     """
 
-    print('认为有用则按Y，认为没用则按N：\n')
-
-    # 防止matplotlib阻塞
-    plt.ion()
-    Thread(target=canvas_event_loop_thread, daemon=True).start()
-
+    session = Session()
     for item in (session.query(Item)
-                 .filter(Item.reviews.any(is_useful=None))
+                 .filter(Item.reviews.any(Review.is_useful.is_(None)))
                  ):
         # 画评价数量-时间图
         dates, _, _, good_bars, bad_bars = draw_rate_time_plot(item.reviews)
@@ -94,6 +78,24 @@ def annotate_data():
                 cur_date_bar.set_color(original_color)
 
         plt.cla()
+
+
+def annotate_data():
+    """
+    手动标注数据，只能从Windows控制台运行，不能从IDE运行
+    """
+
+    print('认为有用则按Y，认为没用则按N：\n')
+
+    # 防止matplotlib阻塞
+    plt.ion()
+
+    canvas = plt.gcf().canvas
+    canvas.mpl_connect('close_event', lambda event: canvas.stop_event_loop())
+
+    # 其他线程标注数据，主线程消息循环
+    Thread(target=annotate_data_thread, daemon=True).start()
+    canvas.start_event_loop()
 
 
 if __name__ == '__main__':
