@@ -7,6 +7,8 @@
 import msvcrt
 from threading import Thread
 
+import matplotlib
+matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 
 from analyze.draw_plot import draw_rate_time_plot
@@ -66,6 +68,7 @@ def annotate_data_thread():
             else:
                 print('时间： 未知')
             print('')
+            plt.draw()
 
             # 输入是否有用
             ch = ''

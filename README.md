@@ -12,6 +12,7 @@ TaobaoAnalyze
 ```
 .
 ├─analyze             分析用的主要程序
+│  ├─dataprocess      准备训练数据
 │  └─models           机器学习模型
 ├─crawler             爬虫
 │  └─Taobao           Scrapy爬虫项目
@@ -21,7 +22,7 @@ TaobaoAnalyze
 │  ├─models           机器学习模型数据
 │  ├─plots            统计图
 │  └─train            机器学习训练数据，如语料库、正负样本
-└─utils               辅助模块，如读写数据库、准备训练数据
+└─utils               辅助模块，如读写数据库
 ```
 
 
