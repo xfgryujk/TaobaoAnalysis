@@ -8,11 +8,11 @@ import codecs
 from os.path import exists
 from random import choices
 
+from hanziconv import HanziConv
 from jieba import cut
 
 from utils.database import session, Review, Rate
 from utils.path import TRAIN_DIR
-from analyze.dataprocess.data_utils import clean_text
 
 CORPUS_POS_PATH = TRAIN_DIR + '/sentiment_corpus_pos.txt'
 CORPUS_NEG_PATH = TRAIN_DIR + '/sentiment_corpus_neg.txt'
@@ -20,6 +20,16 @@ TRAIN_POS_PATH = TRAIN_DIR + '/sentiment_train_pos.txt'
 TRAIN_NEG_PATH = TRAIN_DIR + '/sentiment_train_neg.txt'
 TEST_POS_PATH = TRAIN_DIR + '/sentiment_test_pos.txt'
 TEST_NEG_PATH = TRAIN_DIR + '/sentiment_test_neg.txt'
+
+
+def clean_text(text):
+    """
+    繁体转简体、英文转小写
+    """
+
+    text = HanziConv.toSimplified(text)
+    text = text.lower()
+    return text
 
 
 def create_corpus(pos_path=CORPUS_POS_PATH, neg_path=CORPUS_NEG_PATH):
@@ -41,7 +51,7 @@ def create_corpus(pos_path=CORPUS_POS_PATH, neg_path=CORPUS_NEG_PATH):
             )):
                 content, rate = result
                 content = clean_text(content)
-                file = pos_file if rate == Rate.GOOD else neg_file
+                file = pos_file if Rate(rate).is_good else neg_file
                 file.write('　'.join(cut(content)))
                 file.write('\n')
 
@@ -65,14 +75,12 @@ def create_train_test(pos_path=CORPUS_POS_PATH, neg_path=CORPUS_NEG_PATH,
     pos = choices(pos, k=size)
     neg = choices(neg, k=size)
 
-    with codecs.open(train_pos_path, 'w', 'utf-8') as file:
-        file.writelines(pos[:size_train])
-    with codecs.open(train_neg_path, 'w', 'utf-8') as file:
-        file.writelines(neg[:size_train])
-    with codecs.open(test_pos_path, 'w', 'utf-8') as file:
-        file.writelines(pos[size_train:])
-    with codecs.open(test_neg_path, 'w', 'utf-8') as file:
-        file.writelines(neg[size_train:])
+    for data, path in ((pos[:size_train], train_pos_path),
+                       (neg[:size_train], train_neg_path),
+                       (pos[size_train:], test_pos_path),
+                       (neg[size_train:], test_neg_path)):
+        with codecs.open(path, 'w', 'utf-8') as file:
+            file.writelines(data)
 
 
 if __name__ == '__main__':

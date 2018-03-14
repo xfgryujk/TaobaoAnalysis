@@ -9,6 +9,7 @@ from os.path import exists
 
 import matplotlib.pyplot as plt
 
+from analyze.dataprocess import usefulness
 from utils.database import session, Item
 from utils.path import DATA_DIR, replace_illegal_chars
 
@@ -43,36 +44,12 @@ def draw_rate_time_plot(reviews, ignore_default=False, fix_y_limit=True):
     画评价数量-时间图
     """
 
-    # date -> rate -> 数量
-    rates = {}
-
-    for review in reviews:
-        if ignore_default and review.is_default():  # 忽略默认评论
-            continue
-        if review.date is None:  # 未知日期
-            continue
-        date = review.date.date()
-        rate = review.rate
-
-        if date not in rates:
-            rates[date] = {'-1': 0, '0': 0, '1': 0}
-        rates[date][rate] += 1
-
-    if not rates:
-        return
-
-    # X
-    min_date = min(rates.keys())
-    max_date = max(rates.keys())
+    good_counts, bad_counts, min_date = usefulness.get_n_rates_and_time(reviews, ignore_default)
+    if not good_counts:
+        return [], [], []
+    bad_counts = list(map(int.__neg__, bad_counts))
     dates = [min_date + timedelta(days=day_offset)
-             for day_offset in range((max_date - min_date).days + 1)]
-    # Y
-    good_counts = []
-    bad_counts = []
-    for date in dates:
-        rank = rates.get(date, {'-1': 0, '0': 0, '1': 0})
-        good_counts.append(rank['1'])
-        bad_counts.append(-(rank['-1'] + rank['0']))
+             for day_offset in range(len(good_counts))]
 
     # 画图
     good_bars = plt.bar(dates, good_counts)
@@ -80,7 +57,7 @@ def draw_rate_time_plot(reviews, ignore_default=False, fix_y_limit=True):
     if fix_y_limit:
         plt.ylim(-10, 40)
 
-    return dates, good_counts, bad_counts, good_bars, bad_bars
+    return dates, good_bars, bad_bars
 
 
 def draw_rate_histogram(reviews):
