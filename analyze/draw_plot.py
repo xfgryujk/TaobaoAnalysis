@@ -16,6 +16,7 @@ from utils.path import DATA_DIR, replace_illegal_chars
 PLOTS_DIR = DATA_DIR + '/plots'
 
 sentiment_model = None
+usefulness_model = None
 
 
 def draw_plot_per_item(draw_func, plots_dir=PLOTS_DIR):
@@ -76,5 +77,25 @@ def draw_rate_histogram(reviews):
     plt.hist(sentiments, bins=100, range=(0, 1), normed=1)
 
 
+def draw_usefulness_histogram(reviews):
+    """
+    画有用直方图
+    """
+
+    global usefulness_model
+    if usefulness_model is None:
+        from analyze.models.usefulness import UsefulnessModel
+        usefulness_model = UsefulnessModel()
+
+    usefulness_ = [usefulness_model.predict(review.user_rank,
+                                            len(review.content) + len(review.appends),
+                                            1 if review.has_photo else 0,
+                                            1 if review.appends else 0,
+                                            0)
+                   for review in reviews]
+
+    plt.hist(usefulness_, bins=100, range=(0, 1), normed=1)
+
+
 if __name__ == '__main__':
-    draw_plot_per_item(draw_rate_time_plot)
+    draw_plot_per_item(draw_usefulness_histogram)
