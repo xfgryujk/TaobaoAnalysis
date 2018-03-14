@@ -30,7 +30,7 @@ class UsefulnessModel:
     @staticmethod
     def _create_classifier():
         net = input_data([None, 5])
-        net = fully_connected(net, 40, bias=True, activation='sigmoid')
+        net = fully_connected(net, 40, bias=True, activation='tanh')
         net = fully_connected(net, 2, activation='softmax')
         net = regression(net, optimizer='adam', learning_rate=0.001,
                          loss='categorical_crossentropy')

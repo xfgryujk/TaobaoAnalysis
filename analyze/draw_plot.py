@@ -91,7 +91,7 @@ def draw_usefulness_histogram(reviews):
                                             len(review.content) + len(review.appends),
                                             1 if review.has_photo else 0,
                                             1 if review.appends else 0,
-                                            0)
+                                            0)  # 暂不考虑评论数量差分
                    for review in reviews]
 
     plt.hist(usefulness_, bins=100, range=(0, 1), normed=1)
