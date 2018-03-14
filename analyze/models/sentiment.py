@@ -13,8 +13,7 @@ from tflearn import (input_data, embedding, lstm, fully_connected, regression,
 from tflearn.data_utils import pad_sequences
 
 from analyze.dataprocess.sentiment import (TRAIN_POS_PATH, TRAIN_NEG_PATH,
-                                           TEST_POS_PATH, TEST_NEG_PATH)
-from analyze.dataprocess.data_utils import clean_text
+                                           TEST_POS_PATH, TEST_NEG_PATH, clean_text)
 from utils.path import MODELS_DIR
 
 CLASSIFIER_MODEL_PATH = MODELS_DIR + '/sentiment'

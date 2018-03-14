@@ -56,6 +56,10 @@ class Rate(str, Enum):
     MIDDLE  = '0'       # 中评
     GOOD    = '1'       # 好评
 
+    @property
+    def is_good(self):
+        return self in (Rate.GOOD, Rate.DEFAULT)
+
 
 class Review(Base):
 
@@ -80,6 +84,11 @@ class Review(Base):
         '系统默认评论',
     )
 
+    @property
+    def is_good(self):
+        return Rate(self.rate).is_good
+
+    @property
     def is_default(self):
         return self.content in self.DEFAULT_CONTENTS
 
