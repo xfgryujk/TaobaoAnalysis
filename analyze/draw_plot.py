@@ -9,7 +9,6 @@ from os.path import exists
 
 import matplotlib.pyplot as plt
 
-from analyze.models.sentiment import SentimentModel
 from utils.database import session, Item
 from utils.path import DATA_DIR, replace_illegal_chars
 
@@ -91,6 +90,7 @@ def draw_rate_histogram(reviews):
 
     global sentiment_model
     if sentiment_model is None:
+        from analyze.models.sentiment import SentimentModel
         sentiment_model = SentimentModel()
 
     sentiments = [sentiment_model.predict(review.content)
