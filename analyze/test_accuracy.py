@@ -16,16 +16,17 @@ total_correct = 0
 def eval_classify(content, rate):
     if not content:
         return
+    rate = Rate.GOOD if Rate(rate).is_good else Rate.BAD
 
     sentiments = model.predict(content)
-    _rate = Rate.BAD if sentiments < 0.4 else Rate.GOOD if sentiments > 0.6 else Rate.MIDDLE
+    _rate = Rate.GOOD if sentiments > 0.5 else Rate.BAD
     
     global total_contents, total_correct
     total_contents += 1
     if _rate == rate:
         total_correct += 1
     else:
-        print(sentiments, rate, content)
+        print(sentiments, rate.name, content)
     
     
 def main():
@@ -34,11 +35,11 @@ def main():
         for content in review.appends.split('\n'):
             eval_classify(content, review.rate)
 
-        if index % 100 == 0:
+        if index % 100 == 99:
             print('total_contents =', total_contents)
             print('total_correct =', total_correct)
             print('correct_rate =', total_correct / total_contents)
-            # 大约82.7%正确率
+            # 大约84.4%正确率
 
 
 if __name__ == '__main__':
