@@ -111,7 +111,7 @@ def get_n_rates_and_time(reviews, ignore_default=False):
 
     for review in reviews:
         if (ignore_default and review.is_default  # 忽略默认评论
-            or review.date is None  # 未知日期
+            or review.date is None  # 忽略未知日期
         ):
             continue
         date = review.date.date()
@@ -127,8 +127,7 @@ def get_n_rates_and_time(reviews, ignore_default=False):
     max_date = max(rates.keys())
     dates = (min_date + datetime.timedelta(days=day_offset)
              for day_offset in range((max_date - min_date).days + 1))
-    good_counts = []
-    bad_counts = []
+    good_counts, bad_counts = [], []
     for date in dates:
         n_rates = rates.get(date, {rate: 0 for rate in Rate})
         good_counts.append(n_rates[Rate.GOOD] + n_rates[Rate.DEFAULT])
@@ -137,41 +136,56 @@ def get_n_rates_and_time(reviews, ignore_default=False):
     return good_counts, bad_counts, min_date
 
 
+def get_diffs(reviews, ignore_default=False):
+    """
+    获取评论数量差分数组
+    """
+
+    good_counts, bad_counts, min_date = get_n_rates_and_time(reviews, ignore_default)
+    if not good_counts:
+        return [], min_date
+
+    diffs = []
+    for review in reviews:
+        if review.date is None:  # 未知日期则取0
+            diffs.append(0)
+            continue
+
+        date = review.date.date()
+        index = (date - min_date).days
+        diffs.append(0 if index == 0
+                     else (good_counts[index] - good_counts[index - 1]
+                           if review.is_good
+                           else bad_counts[index] - bad_counts[index - 1])
+                     )
+    return diffs
+
+
 def create_train_test(train_pos_path=TRAIN_POS_PATH, train_neg_path=TRAIN_NEG_PATH,
                       test_pos_path=TEST_POS_PATH, test_neg_path=TEST_NEG_PATH):
     """
     创建训练和测试样本，保证正负样本数一样
     """
 
-    pos = []
-    neg = []
+    pos, neg = [], []
     for item in (session.query(Item)
                  .filter(Item.reviews.any(Review.is_useful.isnot(None)))
                  ):
-        good_counts, bad_counts, min_date = get_n_rates_and_time(item.reviews)
-        if not good_counts:
+        diffs = get_diffs(item.reviews)
+        if not diffs:
             continue
 
-        for review in item.reviews:
+        for review, diff in zip(item.reviews, diffs):
             if (review.is_useful is None  # 未标注
                 or review.date is None  # 未知日期
             ):
                 continue
 
-            # 计算评论数量差分
-            date = review.date.date()
-            index = (date - min_date).days
-            diff = (0 if index == 0
-                    else (good_counts[index] - good_counts[index - 1]
-                          if review.is_good
-                          else bad_counts[index] - bad_counts[index - 1])
-                    )
-
             sample = [
                 review.user_rank,                           # 用户信用等级
                 len(review.content) + len(review.appends),  # 评论长度
-                1 if review.has_photo else 0,               # 是否有图片
-                1 if review.appends else 0,                 # 是否有追评
+                review.has_photo,                           # 是否有图片
+                bool(review.appends),                       # 是否有追评
                 diff,                                       # 评论数量差分
             ]
 

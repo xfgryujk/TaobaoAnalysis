@@ -71,8 +71,7 @@ def draw_rate_histogram(reviews):
         from analyze.models.sentiment import SentimentModel
         sentiment_model = SentimentModel()
 
-    sentiments = [sentiment_model.predict(review.content)
-                  for review in reviews]
+    sentiments = sentiment_model.predict_reviews(reviews)
 
     plt.hist(sentiments, bins=100, range=(0, 1), normed=1)
 
@@ -87,12 +86,7 @@ def draw_usefulness_histogram(reviews):
         from analyze.models.usefulness import UsefulnessModel
         usefulness_model = UsefulnessModel()
 
-    usefulness_ = [usefulness_model.predict(review.user_rank,
-                                            len(review.content) + len(review.appends),
-                                            1 if review.has_photo else 0,
-                                            1 if review.appends else 0,
-                                            0)  # 暂不考虑评论数量差分
-                   for review in reviews]
+    usefulness_ = usefulness_model.predict_reviews(reviews)
 
     plt.hist(usefulness_, bins=100, range=(0, 1), normed=1)
 
