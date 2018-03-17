@@ -8,6 +8,7 @@ import codecs
 from os.path import exists
 
 from jieba import cut
+from tensorflow import reset_default_graph
 from tflearn import input_data, embedding, lstm, fully_connected, regression, DNN
 from tflearn.data_utils import pad_sequences
 
@@ -36,9 +37,9 @@ class SentimentModel:
         else:
             self._load_vocab()
 
-        self._classifier = self._create_classifier()
+        self._model = self._create_classifier()
         if exists(CLASSIFIER_MODEL_PATH + '.meta'):
-            self._classifier.load(CLASSIFIER_MODEL_PATH)
+            self._model.load(CLASSIFIER_MODEL_PATH, True)
 
     def _create_vocab(self, min_count=3):
         """
@@ -73,6 +74,7 @@ class SentimentModel:
         self._word_id = {word: index for index, word in enumerate(self._vocab)}
 
     def _create_classifier(self):
+        reset_default_graph()
         net = input_data([None, SEQUENCE_LEN])
         net = embedding(net, input_dim=len(self._vocab), output_dim=FEATURE_DIM)
         net = lstm(net, FEATURE_DIM, dropout=0.8)
@@ -128,11 +130,11 @@ class SentimentModel:
         train_x, train_y = self._read_train_samples(TRAIN_POS_PATH, TRAIN_NEG_PATH)
         test_x, test_y = self._read_train_samples(TEST_POS_PATH, TEST_NEG_PATH)
 
-        self._classifier.fit(train_x, train_y, validation_set=(test_x, test_y),
-                             n_epoch=20, shuffle=True, show_metric=True,
-                             snapshot_epoch=True)
+        self._model.fit(train_x, train_y, validation_set=(test_x, test_y),
+                        n_epoch=20, shuffle=True, show_metric=True,
+                        snapshot_epoch=True)
 
-        self._classifier.save(CLASSIFIER_MODEL_PATH)
+        self._model.save(CLASSIFIER_MODEL_PATH)
 
     def predict(self, text):
         """
@@ -140,19 +142,22 @@ class SentimentModel:
         """
 
         x = [self._preprocess(text)]
-        return self._classifier.predict(x)[0][0]
+        return self._model.predict(x)[0][0]
 
     def predict_reviews(self, reviews):
         """
         计算所有评论的文本情感值，返回数组
         """
 
+        if not reviews:
+            return []
+
         x = [
             self._preprocess(review.content if not review.appends
                              else review.content + '\n' + review.appends)
             for review in reviews
         ]
-        return [y[0] for y in self._classifier.predict(x)]
+        return [y[0] for y in self._model.predict(x)]
 
 
 if __name__ == '__main__':

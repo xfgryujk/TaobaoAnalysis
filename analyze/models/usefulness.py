@@ -7,6 +7,7 @@
 import pickle
 from os.path import exists
 
+from tensorflow import reset_default_graph
 from tflearn import input_data, fully_connected, regression, DNN
 
 from analyze.dataprocess.usefulness import (TRAIN_POS_PATH, TRAIN_NEG_PATH,
@@ -24,12 +25,13 @@ class UsefulnessModel:
     """
 
     def __init__(self):
-        self._classifier = self._create_classifier()
+        self._model = self._create_classifier()
         if exists(CLASSIFIER_MODEL_PATH + '.meta'):
-            self._classifier.load(CLASSIFIER_MODEL_PATH)
+            self._model.load(CLASSIFIER_MODEL_PATH, True)
 
     @staticmethod
     def _create_classifier():
+        reset_default_graph()
         net = input_data([None, 5])
         net = fully_connected(net, N_HIDDEN_UNITS, bias=True, activation='tanh')
         net = fully_connected(net, 2, activation='softmax')
@@ -76,11 +78,11 @@ class UsefulnessModel:
         train_x, train_y = self._read_train_samples(TRAIN_POS_PATH, TRAIN_NEG_PATH)
         test_x, test_y = self._read_train_samples(TEST_POS_PATH, TEST_NEG_PATH)
 
-        self._classifier.fit(train_x, train_y, validation_set=(test_x, test_y),
-                             n_epoch=40, shuffle=True, show_metric=True,
-                             snapshot_epoch=True)
+        self._model.fit(train_x, train_y, validation_set=(test_x, test_y),
+                        n_epoch=40, shuffle=True, show_metric=True,
+                        snapshot_epoch=True)
 
-        self._classifier.save(CLASSIFIER_MODEL_PATH)
+        self._model.save(CLASSIFIER_MODEL_PATH)
 
     def predict(self, user_rank, content_len, has_photo, has_append, diff):
         """
@@ -90,12 +92,15 @@ class UsefulnessModel:
         x = [self._preprocess([
             user_rank, content_len, has_photo, has_append, diff
         ])]
-        return self._classifier.predict(x)[0][0]
+        return self._model.predict(x)[0][0]
 
     def predict_reviews(self, reviews):
         """
         计算所有评论有用的概率，返回数组
         """
+
+        if not reviews:
+            return []
 
         diffs = get_diffs(reviews)
         x = [self._preprocess([
@@ -106,7 +111,7 @@ class UsefulnessModel:
                 diff
             ]) for review, diff in zip(reviews, diffs)
         ]
-        return [y[0] for y in self._classifier.predict(x)]
+        return [y[0] for y in self._model.predict(x)]
 
 
 if __name__ == '__main__':

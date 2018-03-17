@@ -8,7 +8,7 @@
 from enum import Enum
 
 from sqlalchemy import (create_engine, Column, ForeignKey, Integer, String,
-                        DateTime, Boolean)
+                        DateTime, Boolean, Float)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 
@@ -48,6 +48,7 @@ class Item(Base):
     shop_id = Column(Integer, ForeignKey('shops.id'))        # 商店ID
     shop    = relationship('Shop', back_populates='items')   # 商店
     reviews = relationship('Review', back_populates='item')  # 评论
+    quality = Column(Float)       # 计算得到的商品质量
 
 
 class Rate(str, Enum):
