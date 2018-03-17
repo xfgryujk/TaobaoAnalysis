@@ -142,6 +142,18 @@ class SentimentModel:
         x = [self._preprocess(text)]
         return self._classifier.predict(x)[0][0]
 
+    def predict_reviews(self, reviews):
+        """
+        计算所有评论的文本情感值，返回数组
+        """
+
+        x = [
+            self._preprocess(review.content if not review.appends
+                             else review.content + '\n' + review.appends)
+            for review in reviews
+        ]
+        return [y[0] for y in self._classifier.predict(x)]
+
 
 if __name__ == '__main__':
     SentimentModel().train()

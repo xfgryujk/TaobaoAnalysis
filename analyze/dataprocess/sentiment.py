@@ -45,11 +45,10 @@ def create_corpus(pos_path=CORPUS_POS_PATH, neg_path=CORPUS_NEG_PATH):
 
     with codecs.open(pos_path, 'w', 'utf-8') as pos_file:
         with codecs.open(neg_path, 'w', 'utf-8') as neg_file:
-            for index, result in enumerate(Review.filter_default(
+            for index, (content, rate) in enumerate(Review.filter_default(
                 session.query(Review.content, Review.rate)
                 .filter(Review.content != '')
             )):
-                content, rate = result
                 content = clean_text(content)
                 file = pos_file if Rate(rate).is_good else neg_file
                 file.write('　'.join(cut(content)))

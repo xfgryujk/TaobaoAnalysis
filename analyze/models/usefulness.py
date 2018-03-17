@@ -10,7 +10,7 @@ from os.path import exists
 from tflearn import input_data, fully_connected, regression, DNN
 
 from analyze.dataprocess.usefulness import (TRAIN_POS_PATH, TRAIN_NEG_PATH,
-                                            TEST_POS_PATH, TEST_NEG_PATH)
+                                            TEST_POS_PATH, TEST_NEG_PATH, get_diffs)
 from utils.path import MODELS_DIR
 
 CLASSIFIER_MODEL_PATH = MODELS_DIR + '/usefulness'
@@ -91,6 +91,22 @@ class UsefulnessModel:
             user_rank, content_len, has_photo, has_append, diff
         ])]
         return self._classifier.predict(x)[0][0]
+
+    def predict_reviews(self, reviews):
+        """
+        计算所有评论有用的概率，返回数组
+        """
+
+        diffs = get_diffs(reviews)
+        x = [self._preprocess([
+                review.user_rank,
+                len(review.content) + len(review.appends),
+                review.has_photo,
+                bool(review.appends),
+                diff
+            ]) for review, diff in zip(reviews, diffs)
+        ]
+        return [y[0] for y in self._classifier.predict(x)]
 
 
 if __name__ == '__main__':

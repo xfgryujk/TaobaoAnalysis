@@ -32,14 +32,12 @@ def eval_classify(content, rate):
 def main():
     for index, review in enumerate(Review.filter_default(session.query(Review))):
         eval_classify(review.content, review.rate)
-        for content in review.appends.split('\n'):
-            eval_classify(content, review.rate)
 
         if index % 100 == 99:
             print('total_contents =', total_contents)
             print('total_correct =', total_correct)
             print('correct_rate =', total_correct / total_contents)
-            # 大约84.4%正确率
+            # 大约88.7%正确率
 
 
 if __name__ == '__main__':
