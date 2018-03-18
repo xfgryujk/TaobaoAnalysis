@@ -5,6 +5,7 @@
 """
 
 import numpy as np
+from sqlalchemy import func
 
 from utils.database import session, Item
 
@@ -53,5 +54,9 @@ def get_abnormal_items(items):
 
 
 if __name__ == '__main__':
-    for item in get_abnormal_items(session.query(Item)):
+    for item in get_abnormal_items(session.query(Item)
+                                   .join(Item.reviews)
+                                   .group_by(Item.id)
+                                   .having(func.count(Item.reviews) >= 20)
+                                   ):
         print(get_item_quality(item), item.id, item.title)

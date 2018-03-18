@@ -146,8 +146,12 @@ class ItemIdFromSearchSpider(BaseSpider):
     def parse(self, response):
         script = response.xpath("//script[contains(text(), 'g_page_config')]/text()"
                                 ).extract_first()
+        if script is None:
+            self.logger.warning('可能被反爬虫了！')
+            return
         match = re.search(r'g_page_config = ({.*?});', script)
         if match is None:
+            self.logger.warning('可能被反爬虫了！')
             return
         data = json.loads(match[1])
 

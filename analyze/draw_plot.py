@@ -11,6 +11,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
+from sqlalchemy import func
 
 from analyze.dataprocess import usefulness
 from utils.database import session, Item
@@ -112,12 +113,8 @@ def draw_quality_histogram(items):
 
     from analyze.quality import get_item_quality
 
-    qualities = list(filter(
-        lambda quality: quality is not None,
-        (get_item_quality(item)
-         for item in items
-         if len(item.reviews) >= 20)
-    ))
+    qualities = [get_item_quality(item) for item in items
+                 if len(item.reviews) >= 20]
     plt.title('质量直方图')
     plt.xlabel('质量')
     plt.ylabel('分布密度')
@@ -136,5 +133,8 @@ def draw_quality_histogram(items):
 
 if __name__ == '__main__':
     # draw_plot_per_item(draw_sentiment_histogram)
-    draw_quality_histogram(session.query(Item))
+    draw_quality_histogram(session.query(Item)
+                           .join(Item.reviews)
+                           .group_by(Item.id)
+                           .having(func.count(Item.reviews)) >= 20)
     plt.show()
