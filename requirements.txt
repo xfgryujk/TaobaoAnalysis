@@ -1,9 +1,11 @@
 Scrapy==1.4.0
-selenium==3.6.0
-tflearn==0.3.2
-matplotlib==2.1.0
-jieba==0.39
-hanziconv==0.3.2
 tensorflow_gpu==1.6.0
+scipy==1.0.0
+hanziconv==0.3.2
+tflearn==0.3.2
+jieba==0.39
+selenium==3.6.0
+matplotlib==2.1.0
+numpy==1.14.2
 SQLAlchemy==1.2.5
 tensorflow==1.7.0rc0

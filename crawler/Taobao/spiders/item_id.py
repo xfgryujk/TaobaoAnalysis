@@ -5,6 +5,8 @@ import json
 from scrapy import Request
 
 from .base import BaseSpider
+from utils.path import CRAWLER_DATA_DIR
+import re
 
 
 class ItemIdFromHomePageSpider(BaseSpider):
@@ -117,3 +119,45 @@ class ItemIdFromHomePageSpider(BaseSpider):
                     continue
                 self.file.write(item['auction_id'])
                 self.file.write('\n')
+
+
+ITEM_ID_PATH = ItemIdFromHomePageSpider.get_file_path()
+
+
+class ItemIdFromSearchSpider(BaseSpider):
+    """
+    从搜索爬商品ID
+    """
+
+    name = 'ItemIdFromSearch'
+    file_title = 'item_id'
+    SEARCH_PAGE_URL_PATH = CRAWLER_DATA_DIR + '/search_page_url.txt'
+
+    @staticmethod
+    def gen_start_urls():
+        with open(ItemIdFromSearchSpider.SEARCH_PAGE_URL_PATH) as file:
+            for line in file:
+                yield line.strip()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.start_urls = self.gen_start_urls()
+
+    def parse(self, response):
+        script = response.xpath("//script[contains(text(), 'g_page_config')]/text()"
+                                ).extract_first()
+        match = re.search(r'g_page_config = ({.*?});', script)
+        if match is None:
+            return
+        data = json.loads(match[1])
+
+        for item_id in data['mainInfo']['traceInfo']['traceData']['auctionNids']:
+            self.file.write(item_id)
+            self.file.write('\n')
+
+        pager = data['mods']['pager']['data']
+        if pager['currentPage'] < pager['totalPage']:
+            next_page_s = pager['pageSize'] * pager['currentPage']
+            url = re.sub(r'&s=\d*', '', response.url)
+            url = '{}&s={}'.format(url, next_page_s)
+            yield Request(url, callback=self.parse)

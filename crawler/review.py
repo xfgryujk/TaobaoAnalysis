@@ -8,7 +8,7 @@ from math import ceil
 from selenium import webdriver
 from selenium.common.exceptions import *
 
-from crawler.Taobao.spiders.item_id import ItemIdFromHomePageSpider
+from crawler.Taobao.spiders.item_id import ITEM_ID_PATH
 from utils.database import session, Seller, Shop, Item, Review
 
 logger = logging.getLogger('ReviewSpider')
@@ -32,7 +32,7 @@ class ReviewSpider:
 
     @staticmethod
     def gen_start_urls():
-        with open(ItemIdFromHomePageSpider.get_file_path()) as file:
+        with open(ITEM_ID_PATH) as file:
             for line in file:
                 item_id = int(line.strip())
                 query = session.query(Item).filter_by(id=item_id)
