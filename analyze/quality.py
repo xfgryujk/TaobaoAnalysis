@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 
+"""
+计算商品质量
+"""
+
+import numpy as np
+from sqlalchemy import func
+
 from utils.database import session, Item
 
 sentiment_model = usefulness_model = None
@@ -32,6 +39,24 @@ def get_item_quality(item):
     return item.quality
 
 
+def get_abnormal_items(items):
+    """
+    取质量异常的商品，质量不在2σ之内则认为是异常的
+    """
+
+    items = [item for item in items if len(item.reviews) >= 20]
+    qualities = list(map(get_item_quality, items))
+    mean, std = np.mean(qualities), np.std(qualities)
+    lower_bound, upper_bound = mean - 2 * std, mean + 2 * std
+
+    return [item for item, quality in zip(items, qualities)
+            if quality < lower_bound or quality > upper_bound]
+
+
 if __name__ == '__main__':
-    for item in session.query(Item):
-        print(get_item_quality(item), item.title)
+    for item in get_abnormal_items(session.query(Item)
+                                   .join(Item.reviews)
+                                   .group_by(Item.id)
+                                   .having(func.count(Item.reviews) >= 20)
+                                   ):
+        print(get_item_quality(item), item.id, item.title)
