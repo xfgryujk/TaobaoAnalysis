@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 from math import ceil
 
+import re
 from selenium import webdriver
 from selenium.common.exceptions import *
 
@@ -103,25 +104,32 @@ class ReviewSpider:
             seller_id = int(data['seller']['id'])
             query = session.query(Seller).filter_by(id=seller_id)
             if not session.query(query.exists()).scalar():
-                session.add(Seller(id=seller_id,
-                                   age=data['seller']['shopAge']
-                                   ))
+                session.add(Seller(
+                    id=seller_id,
+                    age=data['seller']['shopAge']
+                ))
 
             # 商店
             shop_id = int(data['shop']['id'])
             query = session.query(Shop).filter_by(id=shop_id)
             if not session.query(query.exists()).scalar():
-                session.add(Shop(id=shop_id,
-                                 url=data['shop']['url'],
-                                 seller_id=seller_id
-                                 ))
+                session.add(Shop(
+                    id=shop_id,
+                    url=data['shop']['url'],
+                    seller_id=seller_id
+                ))
 
             # 商品
             self.item_id = int(data['item']['id'])
-            session.add(Item(id=self.item_id,
-                             title=data['item']['title'],
-                             shop_id=shop_id
-                             ))
+            sell_counter = self.driver.find_element_by_css_selector('div.tb-sell-counter a')
+            match = re.search(r'售出(\d+)件.*?成功(\d+)件', sell_counter.get_attribute('title'))
+            session.add(Item(
+                id=self.item_id,
+                title=data['item']['title'],
+                shop_id=shop_id,
+                sold_count=int(match[1]) if match is not None else 0,
+                confirm_count=int(match[2]) if match is not None else 0
+            ))
 
         except:
             self.logger.exception('解析商店时出错：')
@@ -144,16 +152,17 @@ class ReviewSpider:
                         if review['date'] else None)
                 appends = [i['content'] for i in review['appendList']]
                 appends = '\n'.join(appends)
-                session.add(Review(  # id=review['rateId'],  # 有冲突，暂时不用淘宝的ID
-                                   raw=json.dumps(review),
-                                   item_id=self.item_id,
-                                   rate=review['rate'],
-                                   content=review['content'],
-                                   date=date,
-                                   appends=appends,
-                                   user_rank=review['user']['rank'] if review['user'] else None,
-                                   has_photo=bool(review['photos'])
-                                   ))
+                session.add(Review(
+                    # id=review['rateId'],  # 有冲突，暂时不用淘宝的ID
+                    raw=json.dumps(review),
+                    item_id=self.item_id,
+                    rate=review['rate'],
+                    content=review['content'],
+                    date=date,
+                    appends=appends,
+                    user_rank=review['user']['rank'] if review['user'] else None,
+                    has_photo=bool(review['photos'])
+                ))
 
         except:
             self.logger.exception('解析评论时出错：')

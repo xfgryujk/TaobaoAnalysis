@@ -11,7 +11,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
-from sqlalchemy import func
 
 from analyze.dataprocess import usefulness
 from utils.database import session, Item
@@ -130,11 +129,21 @@ def draw_quality_histogram(items):
                    .format(len(qualities), mean, std))
 
 
-
 if __name__ == '__main__':
     # draw_plot_per_item(draw_sentiment_histogram)
-    draw_quality_histogram(session.query(Item)
-                           .join(Item.reviews)
-                           .group_by(Item.id)
-                           .having(func.count(Item.reviews)) >= 20)
+
+    draw_quality_histogram(Item.with_reviews_more_than(20))
+    plt.show()
+    plt.cla()
+
+    items = (Item.with_reviews_more_than(20))
+    reviews = []
+    for item in items:
+        reviews += item.reviews
+
+    draw_usefulness_histogram(reviews)
+    plt.show()
+    plt.cla()
+
+    draw_sentiment_histogram(reviews)
     plt.show()

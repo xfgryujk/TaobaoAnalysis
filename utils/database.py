@@ -8,7 +8,7 @@
 from enum import Enum
 
 from sqlalchemy import (create_engine, Column, ForeignKey, Integer, String,
-                        DateTime, Boolean, Float)
+                        DateTime, Boolean, Float, func)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 
@@ -43,12 +43,25 @@ class Item(Base):
 
     __tablename__ = 'items'
 
-    id      = Column(Integer, primary_key=True)
-    title   = Column(String)      # 商品标题
-    shop_id = Column(Integer, ForeignKey('shops.id'))        # 商店ID
-    shop    = relationship('Shop', back_populates='items')   # 商店
-    reviews = relationship('Review', back_populates='item')  # 评论
-    quality = Column(Float)       # 计算得到的商品质量
+    id            = Column(Integer, primary_key=True)
+    title         = Column(String)      # 商品标题
+    shop_id       = Column(Integer, ForeignKey('shops.id'))        # 商店ID
+    shop          = relationship('Shop', back_populates='items')   # 商店
+    reviews       = relationship('Review', back_populates='item')  # 评论
+    sold_count    = Column(Integer)     # 30天内已售，未确认收货数
+    confirm_count = Column(Integer)     # 30天内已确认收货数
+    quality       = Column(Float)       # 计算得到的商品质量
+
+    @classmethod
+    def with_reviews_more_than(cls, min_count):
+        """
+        查询所有评论数 >= min_count的商品
+        """
+
+        return (session.query(cls)
+                       .join(cls.reviews)
+                       .group_by(cls.id)
+                       .having(func.count(cls.reviews) >= min_count))
 
 
 class Rate(str, Enum):
