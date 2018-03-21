@@ -14,7 +14,7 @@ from analyze.dataprocess.usefulness import (TRAIN_POS_PATH, TRAIN_NEG_PATH,
                                             TEST_POS_PATH, TEST_NEG_PATH, get_diffs)
 from utils.path import MODELS_DIR
 
-CLASSIFIER_MODEL_PATH = MODELS_DIR + '/usefulness'
+MODEL_PATH = MODELS_DIR + '/usefulness'
 # 隐藏层神经元数
 N_HIDDEN_UNITS = 32
 
@@ -25,12 +25,12 @@ class UsefulnessModel:
     """
 
     def __init__(self):
-        self._model = self._create_classifier()
-        if exists(CLASSIFIER_MODEL_PATH + '.meta'):
-            self._model.load(CLASSIFIER_MODEL_PATH, True)
+        self._model = self._create_model()
+        if exists(MODEL_PATH + '.meta'):
+            self._model.load(MODEL_PATH, True)
 
     @staticmethod
-    def _create_classifier():
+    def _create_model():
         reset_default_graph()
         net = input_data([None, 5])
         net = fully_connected(net, N_HIDDEN_UNITS, bias=True, activation='tanh')
@@ -82,7 +82,7 @@ class UsefulnessModel:
                         n_epoch=40, shuffle=True, show_metric=True,
                         snapshot_epoch=True)
 
-        self._model.save(CLASSIFIER_MODEL_PATH)
+        self._model.save(MODEL_PATH)
 
     def predict(self, user_rank, content_len, has_photo, has_append, diff):
         """

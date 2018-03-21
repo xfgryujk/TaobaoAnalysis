@@ -132,11 +132,11 @@ def draw_quality_histogram(items):
 if __name__ == '__main__':
     # draw_plot_per_item(draw_sentiment_histogram)
 
-    draw_quality_histogram(Item.with_reviews_more_than(20))
+    items = list(Item.with_reviews_more_than(20))
+    draw_quality_histogram(items)
     plt.show()
     plt.cla()
 
-    items = (Item.with_reviews_more_than(20))
     reviews = []
     for item in items:
         reviews += item.reviews
