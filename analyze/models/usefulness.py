@@ -63,8 +63,7 @@ class UsefulnessModel:
                          (neg_path, [0., 1.])):
             with open(path, 'rb') as file:
                 x += pickle.load(file)
-            y += [y_] * len(x)
-
+            y += [y_] * (len(x) - len(y))
         x = list(map(self._preprocess, x))
 
         return x, y
@@ -111,7 +110,14 @@ class UsefulnessModel:
                 diff
             ]) for review, diff in zip(reviews, diffs)
         ]
-        return [y[0] for y in self._model.predict(x)]
+
+        # 分批计算，防止内存不够
+        y = []
+        for index in range(0, len(x), 64):
+            batch_x = x[index: min(index + 64, len(x))]
+            y += [y_[0] for y_ in self._model.predict(batch_x)]
+
+        return y
 
 
 if __name__ == '__main__':

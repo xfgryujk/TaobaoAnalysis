@@ -129,21 +129,24 @@ def draw_quality_histogram(items):
                    .format(len(qualities), mean, std))
 
 
+# TODO 不同行业的商品质量的柱状图
+# TODO 销量-质量散点图
+
+
 if __name__ == '__main__':
     # draw_plot_per_item(draw_sentiment_histogram)
 
     items = list(Item.with_reviews_more_than(20))
+    plt.figure(1)
     draw_quality_histogram(items)
-    plt.show()
-    plt.cla()
 
     reviews = []
     for item in items:
         reviews += item.reviews
 
+    plt.figure(2)
     draw_usefulness_histogram(reviews)
-    plt.show()
-    plt.cla()
 
+    plt.figure(3)
     draw_sentiment_histogram(reviews)
     plt.show()

@@ -18,10 +18,12 @@ from utils.path import MODELS_DIR
 
 MODEL_PATH = MODELS_DIR + '/sentiment'
 VOCABULARY_PATH = MODEL_PATH + '.vocab.pickle'
-# 词向量特征数
-FEATURE_DIM = 128
 # 句子中最多词数
 SEQUENCE_LEN = 64
+# 词向量特征数
+WORD_FEATURE_DIM = 128
+# 文本特征数
+DOC_FEATURE_DIM = 128
 
 
 class SentimentModel:
@@ -63,8 +65,8 @@ class SentimentModel:
         reset_default_graph()
         net = input_data([None, SEQUENCE_LEN])
         net = embedding(net, input_dim=len(self._vocab.vocabulary_),
-                        output_dim=FEATURE_DIM)
-        net = lstm(net, FEATURE_DIM, dropout=0.8)
+                        output_dim=WORD_FEATURE_DIM)
+        net = lstm(net, DOC_FEATURE_DIM, dropout=0.8)
         net = fully_connected(net, 2, activation='softmax')
         net = regression(net, optimizer='adam', learning_rate=0.001,
                          loss='categorical_crossentropy')
@@ -81,7 +83,7 @@ class SentimentModel:
             with codecs.open(path, 'r', 'utf-8') as file:
                 for line in file:
                     x.append(line[:-1])
-            y += y_ * (len(x) - len(y))
+            y += [y_] * (len(x) - len(y))
         x = list(self._vocab.transform(x))
 
         return x, y
@@ -123,7 +125,14 @@ class SentimentModel:
             for review in reviews
         ]
         x = list(self._vocab.transform(x))
-        return [y[0] for y in self._model.predict(x)]
+
+        # 分批计算，防止内存不够
+        y = []
+        for index in range(0, len(x), 64):
+            batch_x = x[index: min(index + 64, len(x))]
+            y += [y_[0] for y_ in self._model.predict(batch_x)]
+
+        return y
 
 
 if __name__ == '__main__':
