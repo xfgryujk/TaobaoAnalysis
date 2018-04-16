@@ -10,6 +10,7 @@ from os.path import exists
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import NullFormatter
 from scipy import stats
 
 from analyze.dataprocess import usefulness
@@ -129,24 +130,66 @@ def draw_quality_histogram(items):
                    .format(len(qualities), mean, std))
 
 
-# TODO 不同行业的商品质量的柱状图
-# TODO 销量-质量散点图
+def draw_sold_quality_plot(items):
+    """
+    画销量-质量图
+    """
+
+    from analyze.quality import get_item_quality
+
+    items = list(filter(lambda item: len(item.reviews) >= 20, items))
+    qualities = [get_item_quality(item) for item in items]
+    sold_counts = [item.sold_count for item in items]
+
+    left, width = 0.1, 0.65
+    bottom, height = 0.1, 0.65
+    bottom_h = bottom + height + 0.02
+    left_h = left + width + 0.02
+
+    rect_histx = [left, bottom_h, width, 0.2]
+    rect_histy = [left_h, bottom, 0.2, height]
+    rect_scatter = [left, bottom, width, height]
+
+    ax_histx = plt.axes(rect_histx)
+    ax_histy = plt.axes(rect_histy)
+    ax_scatter = plt.axes(rect_scatter)
+
+    plt.xlabel('质量')
+    plt.ylabel('销量')
+
+    nullfmt = NullFormatter()
+    ax_histx.xaxis.set_major_formatter(nullfmt)
+    ax_histy.yaxis.set_major_formatter(nullfmt)
+
+    ax_scatter.set_xlim((0, 1))
+    ax_scatter.set_ylim((0, 500))
+    ax_histx.set_xlim(ax_scatter.get_xlim())
+    ax_histy.set_ylim(ax_scatter.get_ylim())
+
+    # 画图
+
+    ax_histx.hist(qualities, bins=100, range=(0, 1))
+    ax_histy.hist(sold_counts, bins=100, range=(0, 500), orientation='horizontal')
+    ax_scatter.scatter(qualities, sold_counts)
 
 
 if __name__ == '__main__':
     # draw_plot_per_item(draw_sentiment_histogram)
 
     items = list(Item.with_reviews_more_than(20))
-    plt.figure(1)
-    draw_quality_histogram(items)
+    # plt.figure(1)
+    # draw_quality_histogram(items)
+    #
+    # reviews = []
+    # for item in items:
+    #     reviews += item.reviews
+    #
+    # plt.figure(2)
+    # draw_usefulness_histogram(reviews)
+    #
+    # plt.figure(3)
+    # draw_sentiment_histogram(reviews)
 
-    reviews = []
-    for item in items:
-        reviews += item.reviews
-
-    plt.figure(2)
-    draw_usefulness_histogram(reviews)
-
-    plt.figure(3)
-    draw_sentiment_histogram(reviews)
+    plt.figure(4)
+    draw_sold_quality_plot(items)
     plt.show()
