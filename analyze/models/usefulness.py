@@ -14,7 +14,7 @@ from analyze.dataprocess.usefulness import (TRAIN_POS_PATH, TRAIN_NEG_PATH,
                                             TEST_POS_PATH, TEST_NEG_PATH, get_diffs)
 from utils.path import MODELS_DIR
 
-CLASSIFIER_MODEL_PATH = MODELS_DIR + '/usefulness'
+MODEL_PATH = MODELS_DIR + '/usefulness'
 # 隐藏层神经元数
 N_HIDDEN_UNITS = 32
 
@@ -25,12 +25,12 @@ class UsefulnessModel:
     """
 
     def __init__(self):
-        self._model = self._create_classifier()
-        if exists(CLASSIFIER_MODEL_PATH + '.meta'):
-            self._model.load(CLASSIFIER_MODEL_PATH, True)
+        self._model = self._create_model()
+        if exists(MODEL_PATH + '.meta'):
+            self._model.load(MODEL_PATH, True)
 
     @staticmethod
-    def _create_classifier():
+    def _create_model():
         reset_default_graph()
         net = input_data([None, 5])
         net = fully_connected(net, N_HIDDEN_UNITS, bias=True, activation='tanh')
@@ -63,8 +63,7 @@ class UsefulnessModel:
                          (neg_path, [0., 1.])):
             with open(path, 'rb') as file:
                 x += pickle.load(file)
-            y += [y_] * len(x)
-
+            y += [y_] * (len(x) - len(y))
         x = list(map(self._preprocess, x))
 
         return x, y
@@ -82,7 +81,7 @@ class UsefulnessModel:
                         n_epoch=40, shuffle=True, show_metric=True,
                         snapshot_epoch=True)
 
-        self._model.save(CLASSIFIER_MODEL_PATH)
+        self._model.save(MODEL_PATH)
 
     def predict(self, user_rank, content_len, has_photo, has_append, diff):
         """
@@ -111,7 +110,14 @@ class UsefulnessModel:
                 diff
             ]) for review, diff in zip(reviews, diffs)
         ]
-        return [y[0] for y in self._model.predict(x)]
+
+        # 分批计算，防止内存不够
+        y = []
+        for index in range(0, len(x), 64):
+            batch_x = x[index: min(index + 64, len(x))]
+            y += [y_[0] for y_ in self._model.predict(batch_x)]
+
+        return y
 
 
 if __name__ == '__main__':

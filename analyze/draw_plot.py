@@ -10,8 +10,8 @@ from os.path import exists
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import NullFormatter
 from scipy import stats
-from sqlalchemy import func
 
 from analyze.dataprocess import usefulness
 from utils.database import session, Item
@@ -130,11 +130,103 @@ def draw_quality_histogram(items):
                    .format(len(qualities), mean, std))
 
 
+def init_scatter_hist(x_limit, y_limit):
+    """
+    :return: ax_histx, ax_histy, ax_scatter
+    """
+
+    left, width = 0.1, 0.65
+    bottom, height = 0.1, 0.65
+    bottom_h = bottom + height + 0.02
+    left_h = left + width + 0.02
+
+    rect_histx = [left, bottom_h, width, 0.2]
+    rect_histy = [left_h, bottom, 0.2, height]
+    rect_scatter = [left, bottom, width, height]
+
+    ax_histx = plt.axes(rect_histx)
+    ax_histy = plt.axes(rect_histy)
+    ax_scatter = plt.axes(rect_scatter)
+
+    nullfmt = NullFormatter()
+    ax_histx.xaxis.set_major_formatter(nullfmt)
+    ax_histy.yaxis.set_major_formatter(nullfmt)
+
+    ax_scatter.set_xlim(x_limit)
+    ax_scatter.set_ylim(y_limit)
+    ax_histx.set_xlim(x_limit)
+    ax_histy.set_ylim(y_limit)
+
+    return ax_histx, ax_histy, ax_scatter
+
+
+def draw_sold_quality_plot(items):
+    """
+    画销量-质量图
+    """
+
+    from analyze.quality import get_item_quality
+
+    items = list(filter(lambda item: len(item.reviews) >= 20, items))
+    qualities = [get_item_quality(item) for item in items]
+    sold_counts = [item.sold_count for item in items]
+
+    x_limit = (0, 1)
+    y_limit = (0, 1000)
+    ax_histx, ax_histy, ax_scatter = init_scatter_hist(x_limit, y_limit)
+    plt.xlabel('质量')
+    plt.ylabel('销量')
+
+    # 画图
+    ax_histx.hist(qualities, bins=100, range=x_limit)
+    ax_histy.hist(sold_counts, bins=100, range=y_limit, orientation='horizontal')
+    ax_scatter.scatter(qualities, sold_counts)
+
+
+def draw_sold_reviews_plot(items):
+    """
+    画销量-评论图
+    """
+
+    items = list(items)
+    review_counts = [len(item.reviews) for item in items]
+    sold_counts = [item.sold_count for item in items]
+
+    x_limit = y_limit = (0, 1000)
+    ax_histx, ax_histy, ax_scatter = init_scatter_hist(x_limit, y_limit)
+    plt.xlabel('评论数')
+    plt.ylabel('销量')
+
+    # 画图
+    ax_histx.hist(review_counts, bins=100, range=x_limit)
+    ax_histy.hist(sold_counts, bins=100, range=y_limit, orientation='horizontal')
+    ax_scatter.scatter(review_counts, sold_counts)
+
+
+def main():
+    # draw_plot_per_item(draw_sentiment_histogram)
+
+    items = list(Item.with_reviews_more_than(20))
+    # plt.figure(1)
+    # draw_quality_histogram(items)
+    #
+    # reviews = []
+    # for item in items:
+    #     reviews += item.reviews
+    #
+    # plt.figure(2)
+    # draw_usefulness_histogram(reviews)
+    #
+    # plt.figure(3)
+    # draw_sentiment_histogram(reviews)
+
+    plt.figure(4)
+    draw_sold_quality_plot(items)
+
+    plt.figure(5)
+    draw_sold_reviews_plot(items)
+    plt.show()
+
 
 if __name__ == '__main__':
-    # draw_plot_per_item(draw_sentiment_histogram)
-    draw_quality_histogram(session.query(Item)
-                           .join(Item.reviews)
-                           .group_by(Item.id)
-                           .having(func.count(Item.reviews)) >= 20)
-    plt.show()
+    main()
