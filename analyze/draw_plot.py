@@ -30,7 +30,7 @@ sentiment_model = usefulness_model = None
 def draw_plot_per_item(draw_func, plots_dir=PLOTS_DIR):
     """
     每个商品画一个图，保存到文件
-    :param draw_func: 画图函数，参数：reviews
+    :param draw_func: 画图函数，参数：items
     :param plots_dir: 保存图像的文件夹
     """
 
@@ -43,16 +43,17 @@ def draw_plot_per_item(draw_func, plots_dir=PLOTS_DIR):
         if exists(path):
             continue
 
-        draw_func(item.reviews)
+        draw_func([item])
         plt.savefig(path)
         plt.cla()
 
 
-def draw_rate_time_plot(reviews, ignore_default=False, fix_y_limit=True):
+def draw_rate_time_plot(items, ignore_default=False, fix_y_limit=True):
     """
     画评价数量-时间图
     """
 
+    reviews = sum((item.reviews for item in items), [])
     good_counts, bad_counts, min_date = usefulness.get_n_rates_and_time(reviews, ignore_default)
     if not good_counts:
         return [], [], []
@@ -72,7 +73,7 @@ def draw_rate_time_plot(reviews, ignore_default=False, fix_y_limit=True):
     return dates, good_bars, bad_bars
 
 
-def draw_sentiment_histogram(reviews):
+def draw_sentiment_histogram(items):
     """
     画情感直方图
     """
@@ -82,14 +83,15 @@ def draw_sentiment_histogram(reviews):
         from analyze.models.sentiment import SentimentModel
         sentiment_model = SentimentModel()
 
-    sentiments = sentiment_model.predict_reviews(reviews)
+    sentiments = sum((sentiment_model.predict_reviews(item.reviews)
+                     for item in items), [])
     plt.title('情感直方图')
     plt.xlabel('情感')
-    plt.ylabel('数量')
-    plt.hist(sentiments, bins=100, range=(0, 1))
+    plt.ylabel('密度')
+    plt.hist(sentiments, bins=100, range=(0, 1), density=True)
 
 
-def draw_usefulness_histogram(reviews):
+def draw_usefulness_histogram(items):
     """
     画有用直方图
     """
@@ -99,11 +101,12 @@ def draw_usefulness_histogram(reviews):
         from analyze.models.usefulness import UsefulnessModel
         usefulness_model = UsefulnessModel()
 
-    usefulness_ = usefulness_model.predict_reviews(reviews)
+    usefulness_ = sum((usefulness_model.predict_reviews(item.reviews)
+                       for item in items), [])
     plt.title('有用概率直方图')
     plt.xlabel('有用概率')
-    plt.ylabel('数量')
-    plt.hist(usefulness_, bins=100, range=(0, 1))
+    plt.ylabel('密度')
+    plt.hist(usefulness_, bins=100, range=(0, 1), density=True)
 
 
 def draw_quality_histogram(items):
@@ -171,7 +174,7 @@ def draw_sold_quality_plot(items):
     qualities = [get_item_quality(item) for item in items]
     sold_counts = [item.sold_count for item in items]
 
-    x_limit = (0, 1)
+    x_limit = (0.55, 0.95)
     y_limit = (0, 1000)
     ax_histx, ax_histy, ax_scatter = init_scatter_hist(x_limit, y_limit)
     plt.xlabel('质量')
@@ -188,7 +191,10 @@ def draw_sold_reviews_plot(items):
     画销量-评论图
     """
 
+    from analyze.quality import get_item_quality
+
     items = list(items)
+    items.sort(key=get_item_quality)
     review_counts = [len(item.reviews) for item in items]
     sold_counts = [item.sold_count for item in items]
 
@@ -201,30 +207,44 @@ def draw_sold_reviews_plot(items):
     ax_histx.hist(review_counts, bins=100, range=x_limit)
     ax_histy.hist(sold_counts, bins=100, range=y_limit, orientation='horizontal')
     ax_scatter.scatter(review_counts, sold_counts)
+    # 最好和最差5个分别用绿色和红色表示
+    ax_scatter.scatter(review_counts[-5:], sold_counts[-5:], c='#00FF00')
+    ax_scatter.scatter(review_counts[:5], sold_counts[:5], c='r')
 
 
 def main():
     # draw_plot_per_item(draw_sentiment_histogram)
 
     items = list(Item.with_reviews_more_than(20))
+
     # plt.figure(1)
     # draw_quality_histogram(items)
     #
-    # reviews = []
-    # for item in items:
-    #     reviews += item.reviews
-    #
     # plt.figure(2)
-    # draw_usefulness_histogram(reviews)
+    # draw_usefulness_histogram(items)
     #
     # plt.figure(3)
-    # draw_sentiment_histogram(reviews)
-
-    plt.figure(4)
-    draw_sold_quality_plot(items)
-
+    # draw_sentiment_histogram(items)
+    #
+    # plt.figure(4)
+    # draw_sold_quality_plot(items)
+    #
     plt.figure(5)
     draw_sold_reviews_plot(items)
+
+    # 最好和最差的5个商品情感直方图
+    # items = list(Item.with_reviews_more_than(20).order_by(Item.quality))
+    # best_items = items[-5:]
+    # worst_items = items[:5]
+    # plt.figure(1)
+    # draw_sentiment_histogram(best_items)
+    # plt.figure(2)
+    # draw_sentiment_histogram(worst_items)
+    # plt.figure(3)
+    # draw_usefulness_histogram(best_items)
+    # plt.figure(4)
+    # draw_usefulness_histogram(worst_items)
+
     plt.show()
 
 

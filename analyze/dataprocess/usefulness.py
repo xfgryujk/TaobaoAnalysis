@@ -51,7 +51,7 @@ class AnnotateData:
                      .filter(Item.reviews.any(Review.is_useful.is_(None)))
                      ):
             # 画评价数量-时间图
-            dates, good_bars, bad_bars = draw_plot.draw_rate_time_plot(item.reviews)
+            dates, good_bars, bad_bars = draw_plot.draw_rate_time_plot([item])
 
             for review in item.reviews:
                 if review.is_useful is not None:
